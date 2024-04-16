@@ -6,34 +6,29 @@ FROM Wards
 WHERE Places > 10;
 GO
 
-SELECT D.Building, COUNT(W.Id) AS CountOfWards
-FROM Departments D
-LEFT JOIN Wards W ON D.Id = W.DepartmentId
-GROUP BY D.Building;
+SELECT D.Building, 
+       (SELECT COUNT(*) FROM Wards WHERE DepartmentId = D.Id) AS CountOfWards
+FROM Departments D;
 GO
 
-SELECT D.Name AS DepartmentName, COUNT(W.Id) AS CountOfWards
-FROM Departments D
-LEFT JOIN Wards W ON D.Id = W.DepartmentId
-GROUP BY D.Name;
+SELECT D.Name AS DepartmentName, 
+       (SELECT COUNT(*) FROM Wards WHERE DepartmentId = D.Id) AS CountOfWards
+FROM Departments D;
 GO
 
-SELECT D.Name AS DepartmentName, SUM(D.Premium) AS TotalPremium
-FROM Departments D
-LEFT JOIN Wards W ON D.Id = W.DepartmentId
-LEFT JOIN Doctors DO ON W.Id = DO.DepartmentId
-GROUP BY D.Name;
+SELECT D.Name AS DepartmentName, 
+       (SELECT SUM(DO.Premium) FROM Doctors DO WHERE DO.DepartmentId = D.Id) AS TotalPremium
+FROM Departments D;
 GO
 
-SELECT D.Name AS DepartmentName, COUNT(DE.DoctorId) AS CountOfDoctors
+SELECT D.Name AS DepartmentName,
+       (SELECT COUNT(*) FROM DoctorsExaminations DE INNER JOIN Wards W ON DE.WardId = W.Id WHERE W.DepartmentId = D.Id) AS CountOfDoctors
 FROM Departments D
-LEFT JOIN Wards W ON D.Id = W.DepartmentId
-LEFT JOIN DoctorsExaminations DE ON W.Id = DE.WardId
-GROUP BY D.Name
-HAVING COUNT(DE.DoctorId) >= 5;
+HAVING CountOfDoctors >= 5;
 GO
 
-SELECT COUNT(*) AS CountOfDoctors, SUM(Salary + Premium) AS TotalSalary
+SELECT COUNT(*) AS CountOfDoctors, 
+       (SELECT SUM(Salary + Premium) FROM Doctors) AS TotalSalary
 FROM Doctors;
 GO
 
@@ -46,10 +41,10 @@ FROM Wards
 WHERE Places = (SELECT MIN(Places) FROM Wards);
 GO
 
-SELECT D.Building, SUM(W.Places) AS TotalPlaces
+SELECT D.Building, 
+       (SELECT SUM(Places) FROM Wards WHERE DepartmentId = D.Id AND Places > 10) AS TotalPlaces
 FROM Departments D
-JOIN Wards W ON D.Id = W.DepartmentId
-WHERE D.Building IN (1, 6, 7, 8) AND W.Places > 10
+WHERE D.Building IN (1, 6, 7, 8)
 GROUP BY D.Building
-HAVING SUM(W.Places) > 100;
+HAVING TotalPlaces > 100;
 GO
